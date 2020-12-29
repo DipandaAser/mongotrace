@@ -29,7 +29,6 @@ func TestTraceOperationUpdate(t *testing.T) {
 		err = client.Ping(ctx, readpref.Primary())
 		if err != nil {
 			t.Error(err)
-			return
 		}
 
 		db := client.Database("Test")
@@ -38,29 +37,26 @@ func TestTraceOperationUpdate(t *testing.T) {
 			ID:   uuid.Must(uuid.NewRandom()).String(),
 			Name: "Jane",
 		}
-		updatedRecord := Person{
-			ID:   initialRecord.ID,
-			Name: "Jane Doe",
-		}
+
 		_, err = db.Collection("Person").InsertOne(ctx, initialRecord)
 		if err != nil {
 			t.Error(err)
 			return
 		}
 		filter := bson.M{"_id": initialRecord.ID}
-		_, err = db.Collection("Person").UpdateOne(ctx, filter, bson.M{"$set": updatedRecord})
+		_, err = db.Collection("Person").UpdateOne(ctx, filter, bson.M{"$set": bson.M{"name": "Jane Doe"}})
 		if err != nil {
 			t.Error(err)
 			return
 		}
 
-		got, err := TraceOperationUpdate(db, "Trace", "Person", initialRecord, filter)
+		got, err := TraceOperationUpdateWithFilter(db, "Trace", "Person", initialRecord, filter)
 		if err != nil {
 			t.Error(err)
 			return
 		}
 
-		differenceWanted := fmt.Sprintf("{\n    \"_id\": \"%s\" (string),\n    \"name\": <span style=\"background-color: #fcff7f\">\"Jane\" (string) => \"Jane Doe\" (string)</span>\n} (object)", initialRecord.ID)
+		differenceWanted := fmt.Sprintf("{\n    \"_id\": \"%s\",\n    \"name\": <span style=\"background-color: #fcff7f\">\"Jane\" => \"Jane Doe\"</span>\n}", initialRecord.ID)
 		if !reflect.DeepEqual(got.Difference, differenceWanted) {
 			t.Errorf("Test: TraceOperationUpdate() \ngot =\n %v \n\n want \n %v", got.Difference, differenceWanted)
 		}
