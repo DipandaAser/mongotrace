@@ -7,7 +7,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	mgo_bson "gopkg.in/mgo.v2/bson"
-	"reflect"
 	"time"
 )
 
@@ -125,11 +124,4 @@ func (trace *Trace) getDifference() {
 	opts.PrintTypes = true
 	_, desc := jsondiff.Compare([]byte(trace.DocumentBefore), []byte(trace.DocumentAfter), &opts)
 	trace.Difference = desc
-}
-
-func createStruct(structTemplate interface{}) interface{} {
-	structType := reflect.TypeOf(structTemplate)
-	newStructObject := reflect.New(structType)
-
-	return newStructObject
 }
