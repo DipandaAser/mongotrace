@@ -62,7 +62,7 @@ func TestTraceOperationUpdate(t *testing.T) {
 
 		differenceWanted := fmt.Sprintf("{\n    \"_id\": \"%s\" (string),\n    \"name\": <span style=\"background-color: #fcff7f\">\"Jane\" (string) => \"Jane Doe\" (string)</span>\n} (object)", initialRecord.ID)
 		if !reflect.DeepEqual(got.Difference, differenceWanted) {
-			t.Errorf("TraceOperationUpdate() got =\n %v \n\n want \n %v", got.Difference, differenceWanted)
+			t.Errorf("Test: TraceOperationUpdate() \ngot =\n %v \n\n want \n %v", got.Difference, differenceWanted)
 		}
 	})
 }
