@@ -6,6 +6,8 @@ import (
 	"github.com/nsf/jsondiff"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	mgo_bson "gopkg.in/mgo.v2/bson"
+	"reflect"
 	"time"
 )
 
@@ -94,7 +96,7 @@ func TraceOperationUpdate(database *mongo.Database, traceCollection string, coll
 		return nil, err
 	}
 
-	trace.sortDifference()
+	trace.getDifference()
 
 	err = trace.save(database, traceCollection)
 	if err != nil {
@@ -106,19 +108,28 @@ func TraceOperationUpdate(database *mongo.Database, traceCollection string, coll
 
 // setDocumentAfterBySearch search a document in the Collection parsing it to json and set it as DocumentAfter
 func (trace *Trace) setDocumentAfterBySearch(database *mongo.Database, filter interface{}) error {
-	var document bson.D
+	var document bson.M
 	err := database.Collection(trace.Collection).FindOne(context.TODO(), filter).Decode(&document)
 	if err != nil {
 		return err
 	}
-	trace.DocumentAfter = StructToJson(document)
+
+	jsonDocument, _ := mgo_bson.MarshalJSON(document)
+	trace.DocumentAfter = string(jsonDocument)
 	return nil
 }
 
-// sortDifference sort the html representation of difference between DocumentBefore an DocumentAfter
-func (trace *Trace) sortDifference() {
+// getDifference sort the html representation of difference between DocumentBefore an DocumentAfter
+func (trace *Trace) getDifference() {
 	opts := jsondiff.DefaultHTMLOptions()
 	opts.PrintTypes = true
 	_, desc := jsondiff.Compare([]byte(trace.DocumentBefore), []byte(trace.DocumentAfter), &opts)
 	trace.Difference = desc
+}
+
+func createStruct(structTemplate interface{}) interface{} {
+	structType := reflect.TypeOf(structTemplate)
+	newStructObject := reflect.New(structType)
+
+	return newStructObject
 }
